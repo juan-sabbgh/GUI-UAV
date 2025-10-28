@@ -30,10 +30,6 @@ class MainWindow(QMainWindow):
         self.ui = Ui_window()
         self.ui.setupUi(self)
 
-        # Botones de conexión
-        self.ui.btn_conectar.setStyleSheet("background-color: rgb(255, 240, 133);")
-        self.ui.btn_conectar_2.setStyleSheet("background-color: rgb(255, 240, 133);")
-
         # Crear páginas
         self.tablero_page = page_Tablero()
         self.diagnosticar_page = page_diagnosticar()
@@ -72,21 +68,23 @@ class MainWindow(QMainWindow):
     def on_btn_tablero_toggled(self):
         if self.ui.btn_tablero.isChecked() or self.ui.btn_tablero_2.isChecked():
             self.ui.stackedWidget.setCurrentIndex(0)
+            self.ui.label_11.setText("Tablero de diagnosticos")
 
     def on_btn_diagnosticar_toggled(self):
         if self.ui.btn_diagnosticar.isChecked() or self.ui.btn_diagnosticar_2.isChecked():
             self.ui.stackedWidget.setCurrentIndex(1)
+            self.ui.label_11.setText("Nuevo diagnostico")
 
     def on_btn_estadisticos_toggled(self):
         if self.ui.btn_estadisticos.isChecked() or self.ui.btn_estadisticos_2.isChecked():
             self.ui.stackedWidget.setCurrentIndex(2)
+            self.ui.label_11.setText("Resultados estadisticos")
 
     # Cuando le picas en conectar
     def on_btn_conectar_toggled(self):
         if self.ui.btn_conectar.isChecked() or self.ui.btn_conectar_2.isChecked():
             self.ui.btn_conectar.setStyleSheet("background-color: rgb(49, 201, 80); color: white")
             self.ui.btn_conectar_2.setStyleSheet("background-color: rgb(49, 201, 80); color: white")
-            self.ui.btn_conectar.setText("Conectado")
             self.ui.btn_conectar_2.setText("Conectado")
 
 

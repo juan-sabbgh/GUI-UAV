@@ -35,6 +35,7 @@ class Bridge(QObject):
 class page_Tablero(QWidget):
     def __init__(self, parent=None):
         super(page_Tablero, self).__init__(parent)
+        self.coordenadas_iniciales = (20.432939, -99.598862)
         self.initUI()
 
     def initUI(self):
@@ -365,7 +366,102 @@ class page_diagnosticar(QWidget):
 
         layout.addWidget(status_bar_frame)
 
+        # --- Barra de Estado (Inferior) ---
+        status_bar_frame = QFrame()
+        status_bar_frame.setObjectName("statusBar")  # ID para CSS
+        status_bar_frame.setFrameShape(QFrame.StyledPanel)
+        status_bar_frame.setMinimumHeight(65)  # Altura mínima
 
+        # Layout principal (horizontal)
+        status_bar_layout = QHBoxLayout(status_bar_frame)
+        status_bar_layout.setContentsMargins(20, 5, 20, 5)  # Más margen horizontal
+        status_bar_layout.setSpacing(25)
+
+        # --- Item 1: Sensores ---
+        item1_layout = QHBoxLayout()
+        icon1_label = QLabel()
+        # NOTA: ¡Reemplaza 'ruta/a/tu/icono_drone.png' por tu icono real!
+        # icon1_label.setPixmap(QPixmap("ruta/a/tu/icono_drone.png").scaled(40, 40, Qt.KeepAspectRatio))
+        icon1_label.setPixmap(QIcon.fromTheme('network-wired').pixmap(40, 40))  # Placeholder
+        icon1_label.setMinimumSize(40, 40)
+        item1_layout.addWidget(icon1_label)
+
+        text1_layout = QVBoxLayout()
+        text1_layout.setSpacing(0)
+        text1_layout.addStretch()
+        text1_layout.addWidget(QLabel("Sensores"))
+        val1_label = QLabel("Buen estado")
+        val1_label.setStyleSheet("font-weight: bold;")
+        text1_layout.addWidget(val1_label)
+        text1_layout.addStretch()
+        item1_layout.addLayout(text1_layout)
+        status_bar_layout.addLayout(item1_layout)
+
+        # --- Item 2: Batería ---
+        item2_layout = QHBoxLayout()
+        icon2_label = QLabel()
+        # NOTA: ¡Reemplaza 'ruta/a/tu/icono_bateria.png' por tu icono real!
+        # icon2_label.setPixmap(QPixmap("ruta/a/tu/icono_bateria.png").scaled(40, 40, Qt.KeepAspectRatio))
+        icon2_label.setPixmap(QIcon.fromTheme('battery').pixmap(40, 40))  # Placeholder
+        icon2_label.setMinimumSize(40, 40)
+        item2_layout.addWidget(icon2_label)
+
+        text2_layout = QVBoxLayout()
+        text2_layout.setSpacing(0)
+        text2_layout.addStretch()
+        text2_layout.addWidget(QLabel("Batería"))
+        val2_label = QLabel("65%")  # Valor de la imagen
+        val2_label.setStyleSheet("font-weight: bold;")
+        text2_layout.addWidget(val2_label)
+        text2_layout.addStretch()
+        item2_layout.addLayout(text2_layout)
+        status_bar_layout.addLayout(item2_layout)
+
+        # Espaciador central
+        status_bar_layout.addStretch()
+
+        # --- Item 3: Tiempo de análisis ---
+        item3_layout = QHBoxLayout()
+        icon3_label = QLabel()
+        # NOTA: ¡Reemplaza 'ruta/a/tu/icono_reloj.png' por tu icono real!
+        # icon3_label.setPixmap(QPixmap("ruta/a/tu/icono_reloj.png").scaled(40, 40, Qt.KeepAspectRatio))
+        icon3_label.setPixmap(QIcon.fromTheme('appointment-new').pixmap(40, 40))  # Placeholder
+        icon3_label.setMinimumSize(40, 40)
+        item3_layout.addWidget(icon3_label)
+
+        text3_layout = QVBoxLayout()
+        text3_layout.setSpacing(0)
+        text3_layout.addStretch()
+        text3_layout.addWidget(QLabel("Tiempo de análisis"))
+        val3_label = QLabel("1 h 15 min")  # Valor de la imagen
+        val3_label.setStyleSheet("font-weight: bold;")
+        text3_layout.addWidget(val3_label)
+        text3_layout.addStretch()
+        item3_layout.addLayout(text3_layout)
+        status_bar_layout.addLayout(item3_layout)
+
+        # --- Item 4: Tiempo de vuelo ---
+        item4_layout = QHBoxLayout()
+        icon4_label = QLabel()
+        # NOTA: ¡Reemplaza 'ruta/a/tu/icono_vuelo.png' por tu icono real!
+        # icon4_label.setPixmap(QPixmap("ruta/a/tu/icono_vuelo.png").scaled(40, 40, Qt.KeepAspectRatio))
+        icon4_label.setPixmap(QIcon.fromTheme('camera-photo').pixmap(40, 40))  # Placeholder [cite: 35]
+        icon4_label.setMinimumSize(40, 40)
+        item4_layout.addWidget(icon4_label)
+
+        text4_layout = QVBoxLayout()
+        text4_layout.setSpacing(0)
+        text4_layout.addStretch()
+        text4_layout.addWidget(QLabel("Tiempo de vuelo"))
+        val4_label = QLabel("27 min")  # Valor de la imagen
+        val4_label.setStyleSheet("font-weight: bold;")
+        text4_layout.addWidget(val4_label)
+        text4_layout.addStretch()
+        item4_layout.addLayout(text4_layout)
+        status_bar_layout.addLayout(item4_layout)
+
+        # Añadir la barra de estado completa al layout principal de la página
+        layout.addWidget(status_bar_frame)
 
         return page
 
