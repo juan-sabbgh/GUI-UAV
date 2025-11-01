@@ -1,12 +1,11 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QApplication
-from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt, QUrl
+from PyQt5.QtCore import pyqtSlot, QFile, QTextStream, Qt, QUrl, pyqtSignal
 import numpy as np
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget,
     QLabel, QSizePolicy
 )
-
 
 import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QPushButton, QVBoxLayout,
@@ -24,9 +23,12 @@ from utils import *
 
 
 class MainWindow(QMainWindow):
+    estado_conexion_changed = pyqtSignal(bool)
+
     def __init__(self):
         super(MainWindow, self).__init__()
-
+        self.conectado = False
+        self.coordenadas_iniciales = (20.432939, -99.598862)
         self.ui = Ui_window()
         self.ui.setupUi(self)
 
@@ -46,6 +48,8 @@ class MainWindow(QMainWindow):
         page2 = self.ui.stackedWidget.widget(2)
         if not page2.layout(): page2.setLayout(QVBoxLayout())
         page2.layout().addWidget(self.estadisticos_page)
+
+        self.estado_conexion_changed.connect(self.diagnosticar_page.set_estado_conexion)
 
         # Conectar botones de sidebarr
         self.ui.btn_tablero.toggled.connect(self.on_btn_tablero_toggled)
@@ -82,10 +86,15 @@ class MainWindow(QMainWindow):
 
     # Cuando le picas en conectar
     def on_btn_conectar_toggled(self):
-        if self.ui.btn_conectar.isChecked() or self.ui.btn_conectar_2.isChecked():
+        is_checked = self.ui.btn_conectar.isChecked() or self.ui.btn_conectar_2.isChecked()
+        if is_checked:
             self.ui.btn_conectar.setStyleSheet("background-color: rgb(49, 201, 80); color: white")
             self.ui.btn_conectar_2.setStyleSheet("background-color: rgb(49, 201, 80); color: white")
             self.ui.btn_conectar_2.setText("Conectado")
+            self.conectado = True
+
+
+        self.estado_conexion_changed.emit(self.conectado)
 
 
 if __name__ == "__main__":

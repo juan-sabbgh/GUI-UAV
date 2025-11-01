@@ -35,7 +35,6 @@ class Bridge(QObject):
 class page_Tablero(QWidget):
     def __init__(self, parent=None):
         super(page_Tablero, self).__init__(parent)
-        self.coordenadas_iniciales = (20.432939, -99.598862)
         self.initUI()
 
     def initUI(self):
@@ -121,6 +120,7 @@ class page_diagnosticar(QWidget):
     def __init__(self):
         super().__init__()
         self.current_step = 0
+        self.conectado = False
 
         # Listas para guardar las coordenadas de cada paso
         self.perimeter_points = []  # Para los 4 puntos de la página 1
@@ -134,6 +134,9 @@ class page_diagnosticar(QWidget):
         self.layout.addWidget(self.stacked_widget)
 
         # Se crean las páginas en orden
+        self.page0 = self.create_page0()
+        self.stacked_widget.addWidget(self.page0)
+
         self.page1 = self.create_page1()
         self.stacked_widget.addWidget(self.page1)
 
@@ -145,6 +148,27 @@ class page_diagnosticar(QWidget):
 
         self.update_page()
 
+    # --- PÁGINA 1: MODIFICADA ---
+    def create_page0(self):
+        page = QWidget()
+        # Guarda el layout para poder añadirle cosas después
+        self.page1_layout = QVBoxLayout(page)
+
+        title = QLabel("Paso previo del Punto de Despegue")
+        title.setStyleSheet("font-size: 24px; font-weight: bold;")
+        self.page1_layout.addWidget(title)
+
+        # 1. Crea el mensaje de "bloqueado"
+        self.locked_label = QLabel("Conecta el UAV para comenzar.")
+        self.locked_label.setStyleSheet(
+            "color: Black; font-size: 20px; font-weight: bold; qproperty-alignment: 'AlignCenter';")
+        self.page1_layout.addWidget(self.locked_label)
+
+
+
+        return page
+
+
     # --- PÁGINA 1: SELECCIÓN DE PERÍMETRO (4 PUNTOS) ---
     def create_page1(self):
         page = QWidget()
@@ -155,8 +179,8 @@ class page_diagnosticar(QWidget):
         layout.addWidget(title)
 
         # Nombres de variables únicos para esta página
-        self.status_label1 = QLabel("Haz clic en el mapa para seleccionar el punto de inicio y aterrizaje.")
-        self.status_label1.setStyleSheet("color: green;")
+        self.status_label1 = QLabel("Ubicación actual del UAV.")
+        self.status_label1.setStyleSheet("color: green; font-size: 19px;")
         layout.addWidget(self.status_label1)
 
         self.coord_list_widget1 = QListWidget()
@@ -171,20 +195,23 @@ class page_diagnosticar(QWidget):
         self.channel1 = QWebChannel()
         self.channel1.registerObject("bridge", self.bridge1)
         self.web_view1.page().setWebChannel(self.channel1)
-        self.bridge1.mapClicked.connect(self.handle_start_point_map_click)
+        #self.bridge1.mapClicked.connect(self.handle_start_point_map_click)
         self.web_view1.setHtml(self.get_map_html(), QUrl("qrc:///"))
 
         # Botones
-        btn_deshacer = QPushButton("Limpiar Selección")
-        btn_deshacer.setStyleSheet("background-color: #f44336; color: white;")
-        btn_deshacer.clicked.connect(self.clear_start_point_marker)
+        #btn_deshacer = QPushButton("Limpiar Selección")
+        #btn_deshacer.setStyleSheet("background-color: #f44336; color: white;")
+        #btn_deshacer.clicked.connect(self.clear_start_point_marker)
+        btn_actualizar = QPushButton("Actualizar puntos")
+        btn_actualizar.setStyleSheet("background-color: #1D8777; color: white;")
+        btn_actualizar.clicked.connect(self.up_to_date_map1)
 
         btn_siguiente = QPushButton("Siguiente")
         btn_siguiente.setStyleSheet("background-color: #4CAF50; color: white;")
         btn_siguiente.clicked.connect(self.go_to_step2)
 
         btn_layout = QHBoxLayout()
-        btn_layout.addWidget(btn_deshacer)
+        btn_layout.addWidget(btn_actualizar)
         btn_layout.addStretch()
         btn_layout.addWidget(btn_siguiente)
         layout.addLayout(btn_layout)
@@ -218,8 +245,6 @@ class page_diagnosticar(QWidget):
         self.channel2.registerObject("bridge", self.bridge2)
         self.web_view2.page().setWebChannel(self.channel2)
         self.bridge2.mapClicked.connect(self.handle_perimeter_map_click)
-        if self.start_point is not None:
-            self.web_view2.page().runJavaScript(f"addMarker({self.start_point(0)}, {self.start_point(1)}, 'lightgreen');")
         self.web_view2.setHtml(self.get_map_html(), QUrl("qrc:///"))
 
         # Botones
@@ -333,7 +358,7 @@ class page_diagnosticar(QWidget):
         btn_guardar.clicked.connect(self.auxiliar)
         btn_imprimir.clicked.connect(lambda: QMessageBox.information(self, "Imprimir", "Imprimiendo..."))
         btn_ver_fotos.clicked.connect(lambda: QMessageBox.information(self, "Ver fotos", "Mostrando fotos..."))
-        btn_terminar.clicked.connect(self.reset_diagnostic)
+        btn_terminar.clicked.connect(self.reset_diagnostic_ended)
 
         btn_layout.addWidget(btn_guardar)
         btn_layout.addWidget(btn_imprimir)
@@ -566,6 +591,14 @@ class page_diagnosticar(QWidget):
         </html>
         """
 
+    @pyqtSlot(bool)
+    def set_estado_conexion(self, conectado):
+        """
+        Este es el SLOT que recibe la señal desde MainWindow.
+        """
+        self.conectado = conectado
+        self.go_to_step1()
+
     # --- MANEJADORES DE CLIC (SEPARADOS) ---
     @pyqtSlot(float, float)
     def handle_start_point_map_click(self, lat, lng):
@@ -574,7 +607,8 @@ class page_diagnosticar(QWidget):
             item_text = f"Punto de inicio: ({lat:.5f}, {lng:.5f})"
             self.coord_list_widget1.addItem(item_text)
             self.web_view1.page().runJavaScript(f"addMarker({lat}, {lng}, 'lightgreen');")
-            self.status_label1.setText("Punto de inicio y aterrizaje seleccionado.")
+            self.status_label1 = QLabel("Ubicación actual del UAV.")
+            self.status_label1.setStyleSheet("color: green; font-size: 19px;")
         else:
             self.status_label1.setText("Solo se puede seleccionar 1 punto. Limpie para reiniciar.")
 
@@ -605,6 +639,7 @@ class page_diagnosticar(QWidget):
 
     def auxiliar(self):
         self.web_view3.page().runJavaScript(f"addMarker({self.start_point[0]}, {self.start_point[1]}, 'lightgreen');")
+
         for p in self.perimeter_points:
             self.web_view3.page().runJavaScript(f"addMarker({p[0]}, {p[1]}, 'red');")
         else:
@@ -614,17 +649,22 @@ class page_diagnosticar(QWidget):
 
     # --- MÉTODOS DE LIMPIEZA (SEPARADOS) ---
     def clear_start_point_marker(self):
-        self.start_point = None
+        self.start_point = (20.432939, -99.598862)  ######### pendiente
         self.coord_list_widget1.clear()
         self.web_view1.page().runJavaScript("clearMarkers();")
-        self.status_label1.setText("Haz clic en el mapa para seleccionar el punto de inicio y aterrizaje.")
+        self.status_label1 = QLabel("Ubicación actual del UAV.")
+        self.status_label1.setStyleSheet("color: green; font-size: 19px;")
+
+    def up_to_date_map1(self):
+        # Borrando puntos del mapa y actualizando ubicación actual
+        self.web_view1.page().runJavaScript("clearMarkers();")
+        self.web_view1.page().runJavaScript(f"addMarker({self.start_point[0]}, {self.start_point[1]}, 'lightgreen');")
 
     def up_to_date_map2(self):
-        self.web_view2.page().runJavaScript("clearMarkers();")
-
+        # Borrando puntos del mapa y actualizando ubicación actual
         # dibujando el punto de despegue y aterrizaje
+        self.web_view2.page().runJavaScript("clearMarkers();")
         self.web_view2.page().runJavaScript(f"addMarker({self.start_point[0]}, {self.start_point[1]}, 'lightgreen');")
-
         # dibujando el área
         for lat, lng in self.perimeter_points:
             self.web_view2.page().runJavaScript(f"addMarker({lat}, {lng}, 'red');")
@@ -639,33 +679,63 @@ class page_diagnosticar(QWidget):
         self.web_view2.page().runJavaScript(f"addMarker({self.start_point[0]}, {self.start_point[1]}, 'lightgreen');")
         self.status_label2.setText("Haz clic en el mapa para seleccionar los 4 puntos del perímetro.")
 
-    # --- LÓGICA DE NAVEGACIÓN (CORREGIDA) ---
+
+    def go_to_step1(self):
+        if self.conectado:
+            self.current_step = 1
+            self.coordenadas_iniciales = (20.432939, -99.598862)  ######### pendiente
+            lat, lng = self.coordenadas_iniciales
+            self.start_point = (lat, lng)
+            zoom = 18
+            self.web_view1.page().runJavaScript(f"map.setView([{lat}, {lng}], {zoom});")
+            self.web_view1.page().runJavaScript(f"addMarker({lat}, {lng}, 'lightgreen');")
+            self.update_page()
+
     def go_to_step2(self):
         if self.start_point is not None:
-            self.current_step = 1
+            self.current_step = 2
 
             lat, lng = self.start_point
             zoom = 18
             self.web_view2.page().runJavaScript(f"map.setView([{lat}, {lng}], {zoom});")
+            if self.start_point is not None:
+                self.web_view2.page().runJavaScript(f"addMarker({lat}, {lng}, 'lightgreen');")
             self.update_page()
         else:
             QMessageBox.warning(self, "Error", "Debes seleccionar un punto de despegue.")
 
-
     def go_to_step3(self):
         if len(self.perimeter_points) == 4:
-            self.current_step = 2
+            self.current_step = 3
+            # Limpiar centrar y marcar mapa
+            self.web_view3.page().runJavaScript("clearMarkers();")
+            self.web_view3.page().runJavaScript(f"map.setView([{self.start_point[0]}, {self.start_point[1]}], {18});")
+            self.web_view3.page().runJavaScript(
+                f"addMarker({self.start_point[0]}, {self.start_point[1]}, 'lightgreen');")
+            # Marca del área de monitoreo
+            for p in self.perimeter_points:
+                self.web_view3.page().runJavaScript(f"addMarker({p[0]}, {p[1]}, 'red');")
+            else:
+                points_json = json.dumps(self.perimeter_points)
+                self.web_view3.page().runJavaScript(f"drawPolygon('{points_json}');")
             self.update_page()
+
         else:
             QMessageBox.warning(self, "Error", "Debes seleccionar exactamente 4 puntos para el perímetro.")
-        self.web_view2.page().runJavaScript(f"map.setView([{self.start_point[0]}, {self.start_point[1]}], {18});")
+
+
 
 
     def reset_diagnostic(self):
-        self.current_step = 0
+        self.current_step = 1 if self.conectado else 0
         self.clear_perimeter_markers()
         self.clear_start_point_marker()
         self.update_page()
+
+    def reset_diagnostic_ended(self):
+        self.clear_perimeter_markers()
+        self.clear_start_point_marker()
+        self.go_to_step1()
 
     def update_page(self):
         self.stacked_widget.setCurrentIndex(self.current_step)
