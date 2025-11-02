@@ -528,6 +528,7 @@ class page_diagnosticar(QWidget):
         # Añadir la barra de estado completa al layout principal de la página
         layout.addWidget(status_bar_frame)
 
+
         return page
 
     def get_map_html(self):
@@ -758,7 +759,7 @@ class page_diagnosticar(QWidget):
 
     def come_back_to_step1(self):
         self.clear_perimeter_markers()
-        self.clear_start_point_marker()
+        #self.clear_start_point_marker()
         self.current_step = 1
         self.update_page()
 
