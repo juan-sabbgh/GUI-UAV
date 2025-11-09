@@ -16,6 +16,24 @@ import io
 import folium
 from design import Ui_window
 import time
+import paramiko
+import json
+
+
+##Varaibles de conexion CAMBIARLAS CUANDO SE TRATE DE LA RASPBERRY
+#Ip de tailscale del dispositivo
+TAILSCALE_IP = "10.3.141.1"
+#Nombre de usuario con el que se inicia sesion en el otro dispositivo
+USERNAME = "pera"
+#Contrasena
+PASSWORD = "2314"
+
+##Ruta CAMBIAR CUANDO SEA CON RASPBERRY
+RUTA = "/home/pera/"
+
+# Initialize SSH client
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 
 
@@ -596,7 +614,7 @@ class page_diagnosticar(QWidget):
                  */
                 function addMarker(lat, lng, color) {
                     L.circleMarker([lat, lng], {
-                        radius: 8,
+                        radius: 1,
                         color: color,         // Color del borde
                         fillColor: color,     // Color de relleno
                         fillOpacity: 0.8
@@ -741,9 +759,24 @@ class page_diagnosticar(QWidget):
             QMessageBox.warning(self, "Error", "Debes seleccionar un punto de despegue.")
 
     def go_to_step3(self):
+        coordenadas_manuales = [(18.888597, -99.023020),(18.888596, -99.022982),(18.888565, -99.023013),(18.888569, -99.022972)]
         if len(self.perimeter_points) == 4:
             self.current_step = 3
             self.update_page()
+            json_payload = json.dumps(coordenadas_manuales)
+            cmd = f"bash -lc 'source /home/pera/venv_drone/bin/activate && python3 -u /home/pera/xdd2.py'"
+            client.connect(TAILSCALE_IP, username=USERNAME, password=PASSWORD)
+            stdin, stdout, stderr = client.exec_command(cmd, get_pty=False)
+
+            # enviar JSON y cerrar stdin para indicar EOF
+            stdin.write(json_payload)
+            stdin.flush()
+            stdin.channel.shutdown_write()
+
+            # leer salida (bloqueante hasta que el proceso termine)
+            out = stdout.read().decode('utf-8')
+            err = stderr.read().decode('utf-8')
+
 
     def go_to_step4(self):
         if len(self.perimeter_points) == 4:
@@ -787,6 +820,7 @@ class page_diagnosticar(QWidget):
 
     def update_page(self):
         self.stacked_widget.setCurrentIndex(self.current_step)
+           
 
 
 # --- PÁGINA ESTADÍSTICOS (propuesta) ---

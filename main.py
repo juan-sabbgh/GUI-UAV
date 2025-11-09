@@ -26,14 +26,14 @@ from utils_connection import obtener_gps_ssh
 
 ##Varaibles de conexion CAMBIARLAS CUANDO SE TRATE DE LA RASPBERRY
 #Ip de tailscale del dispositivo
-TAILSCALE_IP = "100.104.54.62"
+TAILSCALE_IP = "10.3.141.1"
 #Nombre de usuario con el que se inicia sesion en el otro dispositivo
-USERNAME = "juanincho"
+USERNAME = "pera"
 #Contrasena
 PASSWORD = "2314"
 
 ##Ruta CAMBIAR CUANDO SEA CON RASPBERRY
-RUTA = "/home/juanincho/Documents/GitHub/proyecto_drone/"
+RUTA = "/home/pera/"
 
 
 class MainWindow(QMainWindow):
@@ -102,10 +102,11 @@ class MainWindow(QMainWindow):
     def on_btn_conectar_toggled(self):
         is_checked = self.ui.btn_conectar.isChecked() or self.ui.btn_conectar_2.isChecked()
         if is_checked:
-            comando = "bash -lc 'source "+ RUTA + "venv/bin/activate && python3 -u " + RUTA + "obtener_coordenadas.py'"
+            comando = "bash -lc 'source "+ RUTA + "venv_drone/bin/activate && python3 -u " + RUTA + "obtener_coordenadas.py'"
             #print(comando)
             ##Aqui se hace la conexion
             lat, long = obtener_gps_ssh(TAILSCALE_IP, USERNAME, PASSWORD, comando)
+            #lat, long = 0.000,0.000
             #######Comprobar que se hayan obtenido las coordenadas correctamente
             if lat is not None and long is not None:
                 self.ui.btn_conectar.setStyleSheet("background-color: rgb(49, 201, 80); color: white")
