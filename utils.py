@@ -580,11 +580,13 @@ class page_diagnosticar(QWidget):
             <div id="map"></div>
             <script>
                 // 1. Inicializar el mapa
-                var map = L.map('map').setView([20.432939, -99.598862], 18);
+                var map = L.map('map').setView([20.432939, -99.598862], 30);
 
                 // Capa de satélite
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: 'mapa interactuable'
+                    attribution: 'mapa interactuable',
+                    maxNativeZoom: 18,
+                    maxZoom: 22
                 }).addTo(map);
 
                 // --- NUEVAS CAPAS ---
@@ -763,7 +765,7 @@ class page_diagnosticar(QWidget):
         if len(self.perimeter_points) == 4:
             self.current_step = 3
             self.update_page()
-            json_payload = json.dumps(coordenadas_manuales)
+            json_payload = json.dumps(self.perimeter_points)
             cmd = f"bash -lc 'source /home/pera/venv_drone/bin/activate && python3 -u /home/pera/xdd2.py'"
             client.connect(TAILSCALE_IP, username=USERNAME, password=PASSWORD)
             stdin, stdout, stderr = client.exec_command(cmd, get_pty=False)
